@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Summary - DC Palaran 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'bss-red': '#9A2120',
+                        'card-maroon': '#84302C',
+                        'card-dark': '#3A3F40',
+                        'card-rust': '#B6443E',
+                        'card-pink': '#DC7398',
+                        'bg-gray': '#F4F4F4'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-bg-gray font-sans text-gray-800 antialiased min-h-screen flex flex-col">
+
+    <div id="loading-overlay" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center text-center p-4">
+        <div class="w-12 h-12 border-4 border-bss-red border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-bss-red font-bold uppercase tracking-widest text-xs">Memuat Data DC Palaran...</p>
+    </div>
+
+    <header class="bg-bss-red text-white shadow-md">
+        <div class="flex justify-end items-center px-8 py-3">
+            <div class="flex items-center gap-4 bg-white px-4 py-2 rounded-lg">
+                <span class="text-bss-red font-black text-2xl italic">BSS</span>
+                <div class="h-8 w-px bg-gray-300"></div>
+                <div class="text-[10px] text-black font-bold leading-tight uppercase">SINERGI<br>MAXIMIZE</div>
+            </div>
+        </div>
+    </header>
+
+    <main id="main-content" class="hidden flex-grow p-6 max-w-[1600px] mx-auto w-full">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-2 h-8 bg-card-maroon"></div>
+                <h2 class="text-3xl font-extrabold text-gray-800 uppercase tracking-tight">EXECUTIVE SUMMARY - DC PALARAN</h2>
+            </div>
+            <div class="text-right">
+                <span class="bg-card-dark text-white px-3 py-1 rounded text-xs font-bold uppercase">Target: 3.029 Item | Deadline: 26 Mei 2026</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-6">
+            <!-- Achievement Card -->
+            <div class="bg-bss-red text-white p-4 rounded shadow-md h-[180px] flex flex-col justify-between border-b-4 border-black/20">
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold" id="val-ach-pct">0%</h3>
+                    <p class="text-[10px] font-bold tracking-widest opacity-80 uppercase">Achievement Progress</p>
+                </div>
+                <div class="bg-black/20 rounded p-2 text-[10px]">
+                    <div class="flex justify-between border-b border-white/10 pb-1 mb-1">
+                        <span>PLAN (KUMULATIF)</span>
+                        <span class="font-bold" id="val-plan-total">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>ACTUAL (KOLOM Q)</span>
+                        <span class="font-bold text-yellow-300" id="val-actual-total">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Value Card (Column O) -->
+            <div class="bg-card-maroon text-white p-4 rounded shadow-md h-[180px] flex flex-col justify-between">
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold" id="val-total-rp">Rp 0</h3>
+                    <p class="text-[10px] font-bold tracking-widest opacity-80 uppercase">Value Unrestricted (O)</p>
+                </div>
+                <div class="bg-black/20 rounded p-2 text-[10px]">
+                    <div class="flex justify-between border-b border-white/10 pb-1 mb-1">
+                        <span>TOTAL TARGET</span>
+                        <span class="font-bold">3.029 Item</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>LOKASI</span>
+                        <span class="font-bold">DC PALARAN</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SOH Accuracy Card -->
+            <div class="bg-card-dark text-white p-4 rounded shadow-md h-[180px] flex flex-col justify-between">
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold" id="val-selisih">0</h3>
+                    <p class="text-[10px] font-bold tracking-widest opacity-80 uppercase">Selisih Unit SOH</p>
+                </div>
+                <div class="border border-white/20 rounded p-2 text-[10px]">
+                    <div class="flex justify-between mb-1">
+                        <span>SOH SISTEM (M)</span>
+                        <span class="font-bold" id="val-soh-sistem">0</span>
+                    </div>
+                    <div class="flex justify-between text-green-400 font-bold border-t border-white/10 pt-1 mt-1">
+                        <span>AKURASI</span>
+                        <span id="val-akurasi">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item Terverifikasi Card -->
+            <div class="bg-card-rust text-white p-4 rounded shadow-md h-[180px] flex flex-col justify-between">
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold" id="val-verified-count">0</h3>
+                    <p class="text-[10px] font-bold tracking-widest opacity-80 uppercase">Item Terverifikasi (Q)</p>
+                </div>
+                <div class="bg-black/20 rounded p-2 text-[10px] text-center italic">
+                    Lookup Data Kolom Q
+                </div>
+            </div>
+
+            <!-- Value Fisik Card -->
+            <div class="bg-card-pink text-white p-4 rounded shadow-md h-[180px] flex flex-col justify-between">
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold" id="val-soh-fisik-rp">Rp 0</h3>
+                    <p class="text-[10px] font-bold tracking-widest uppercase">Value SOH Fisik</p>
+                </div>
+                <div class="bg-white/20 rounded p-2 text-[10px] text-center italic">Value Unr / SOH Sis x SOH Akt</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-5 rounded shadow-sm border h-[350px]">
+                <h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Achievement Plan VS Actual (Lookup Tgl Col A)</h3>
+                <canvas id="lineChartAchievement"></canvas>
+            </div>
+            <div class="bg-white p-5 rounded shadow-sm border h-[350px] flex flex-col items-center">
+                <h3 class="font-bold text-gray-700 mb-2 border-b pb-2 text-sm uppercase w-full text-center">Final Verifikasi Tim Tekhnis</h3>
+                <div class="relative w-full h-full flex items-center justify-center py-2">
+                    <canvas id="pieChartVerifikasi"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded shadow-sm border mb-8 h-[350px]">
+            <h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Value SOH Fisik by Final Verifikasi Tim Tekhnis</h3>
+            <canvas id="barChartFisik"></canvas>
+        </div>
+    </main>
+
+    <script>
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSX0H4b5mQeFYUKD99Xk3EsQsiFqh9QnSGDppeW1aoAcK4dziuqpPItIKZt56dFoA/pub?output=csv&gid=304927561';
+
+        const formatRpSmart = (num) => {
+            if (num === 0) return 'Rp 0';
+            const absNum = Math.abs(num);
+            if (absNum >= 1000000000) return 'Rp ' + (num / 1000000000).toFixed(2).replace('.', ',') + ' M';
+            if (absNum >= 1000000) return 'Rp ' + (num / 1000000).toFixed(2).replace('.', ',') + ' Juta';
+            return 'Rp ' + new Intl.NumberFormat('id-ID').format(num);
+        };
+
+        const parseIDNum = (val) => {
+            if (!val || val === '-' || val === '') return 0;
+            let str = val.toString().replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '');
+            return parseFloat(str) || 0;
+        };
+
+        function processData(results) {
+            const data = results.data;
+            if (!data || data.length === 0) return;
+
+            const headers = Object.keys(data[0]);
+            let totalValUnrestricted = 0;
+            let totalSohFisik = 0;
+            let totalSys = 0;
+            let totalAct = 0;
+            let verifiedCount = 0;
+            let statusMap = {};
+            let verifFisikValueMap = {};
+            let dailyActualMap = {};
+
+            data.forEach(row => {
+                const keys = Object.keys(row);
+                const valUnr = parseIDNum(row[keys[14]]); // Col O
+                const sohSis = parseIDNum(row[keys[12]]); // Col M
+                const sohAkt = parseIDNum(row[keys[15]]); // Col P
+                const dateRaw = row[keys[0]] ? row[keys[0]].toString() : ""; // Col A
+                
+                const price = (sohSis > 0) ? (valUnr / sohSis) : 0;
+                const valSohFisik = price * sohAkt;
+
+                const statusRaw = row[keys[16]] ? row[keys[16]].toString().trim() : ""; // Col Q
+                const isVerified = statusRaw !== "" && statusRaw !== "-";
+                const status = isVerified ? statusRaw : "Belum Diverifikasi";
+
+                totalValUnrestricted += valUnr;
+                totalSohFisik += valSohFisik;
+                totalSys += sohSis;
+                totalAct += sohAkt;
+                
+                if (isVerified) {
+                    verifiedCount++;
+                    // Extract Date from Col A (Format: DD.MM.YYYY HH:mm:ss or similar)
+                    if (dateRaw) {
+                        const datePart = dateRaw.split(' ')[0].replace(/\//g, '.'); 
+                        dailyActualMap[datePart] = (dailyActualMap[datePart] || 0) + 1;
+                    }
+                }
+                
+                statusMap[status] = (statusMap[status] || 0) + 1;
+                verifFisikValueMap[status] = (verifFisikValueMap[status] || 0) + valSohFisik;
+            });
+
+            const startDate = new Date('2026-05-11');
+            const today = new Date(); 
+            const diffTime = Math.abs(today - startDate);
+            const daysElapsed = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24))); 
+            
+            const targetPerDay = 240;
+            const cumulativePlan = daysElapsed * targetPerDay;
+            const achPercentage = ((verifiedCount / cumulativePlan) * 100).toFixed(1);
+
+            document.getElementById('val-total-rp').innerText = formatRpSmart(totalValUnrestricted);
+            document.getElementById('val-soh-fisik-rp').innerText = formatRpSmart(totalSohFisik);
+            document.getElementById('val-ach-pct').innerText = achPercentage + '%';
+            document.getElementById('val-plan-total').innerText = new Intl.NumberFormat('id-ID').format(cumulativePlan);
+            document.getElementById('val-actual-total').innerText = new Intl.NumberFormat('id-ID').format(verifiedCount);
+            document.getElementById('val-verified-count').innerText = new Intl.NumberFormat('id-ID').format(verifiedCount);
+            document.getElementById('val-soh-sistem').innerText = new Intl.NumberFormat('id-ID').format(totalSys);
+            document.getElementById('val-akurasi').innerText = totalSys > 0 ? ((totalAct / totalSys) * 100).toFixed(1) + '%' : '0%';
+            document.getElementById('val-selisih').innerText = new Intl.NumberFormat('id-ID').format(Math.abs(totalSys - totalAct));
+
+            renderCharts(verifFisikValueMap, statusMap, daysElapsed, targetPerDay, dailyActualMap, startDate);
+            
+            document.getElementById('loading-overlay').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+        }
+
+        function renderCharts(verifFisikValueMap, statusMap, daysElapsed, targetPerDay, dailyActualMap, startDate) {
+            const labelsLine = [];
+            const dataPlan = [];
+            const dataActual = [];
+            let cumulativeActual = 0;
+
+            for (let i = 0; i < 16; i++) { // From May 11 to May 26
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                
+                const day = date.getDate().toString().padStart(2, '0');
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const year = date.getFullYear();
+                
+                const label = `${day}/${month}`;
+                const key = `${day}.${month}.${year}`;
+                
+                labelsLine.push(label);
+                dataPlan.push((i + 1) * targetPerDay);
+                
+                // Only show actual data up to current day
+                if (i < daysElapsed) {
+                    cumulativeActual += (dailyActualMap[key] || 0);
+                    dataActual.push(cumulativeActual);
+                }
+            }
+
+            new Chart(document.getElementById('lineChartAchievement'), {
+                type: 'line',
+                data: {
+                    labels: labelsLine,
+                    datasets: [
+                        { label: 'Plan (Kumulatif)', data: dataPlan, borderColor: '#3A3F40', borderDash: [5, 5], fill: false, pointRadius: 0 },
+                        { label: 'Actual (Lookup Tgl)', data: dataActual, borderColor: '#9A2120', backgroundColor: 'rgba(154, 33, 32, 0.1)', fill: true, tension: 0.3, pointRadius: 4 }
+                    ]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } }
+                }
+            });
+
+            new Chart(document.getElementById('pieChartVerifikasi'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusMap),
+                    datasets: [{ 
+                        data: Object.values(statusMap), 
+                        backgroundColor: ['#84302C', '#3A3F40', '#B6443E', '#DC7398', '#9A2120'],
+                        borderWidth: 2, borderColor: '#ffffff'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } } } }
+            });
+
+            new Chart(document.getElementById('barChartFisik'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(verifFisikValueMap),
+                    datasets: [{ label: 'Value SOH Fisik', data: Object.values(verifFisikValueMap), backgroundColor: '#84302C', borderRadius: 4 }]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { ticks: { callback: (v) => formatRpSmart(v), font: { size: 10 } } } }
+                }
+            });
+        }
+
+        window.onload = () => {
+            Papa.parse(SHEET_URL, {
+                download: true, header: true, skipEmptyLines: true,
+                complete: processData,
+                error: () => { document.getElementById('loading-overlay').innerHTML = "Gagal memuat data DC Palaran."; }
+            });
+        };
+    </script>
+</body>
+</html>
