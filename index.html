@@ -342,25 +342,53 @@
             let totalValUnr = 0, totalSohFis = 0, totalSys = 0, totalAct = 0, verifCount = 0;
             let statusMap = {}, verifFisikMap = {}, dailyActualMap = {};
 
-            store.main.forEach(row => {
-                const keys = Object.keys(row);
-                if (keys.length < 15) return;
-                const valUnr = parseIDNum(row[keys[14]]), sohSis = parseIDNum(row[keys[12]]), sohAkt = parseIDNum(row[keys[15]]), dateRaw = row[keys[0]] ? row[keys[0]].toString() : ""; 
-                const price = (sohSis > 0) ? (valUnr / sohSis) : 0, valSohFis = price * sohAkt;
-                const statusRaw = row[keys[16]] ? row[keys[16]].toString().trim() : ""; 
-                const status = (statusRaw !== "" && statusRaw !== "-") ? statusRaw : "Belum Diverifikasi";
-                
-                totalValUnr += valUnr; totalSohFis += valSohFis; totalSys += sohSis; totalAct += sohAkt;
-                if (status !== "Belum Diverifikasi") {
-                    verifCount++;
-                    if (dateRaw) {
-                        const d = dateRaw.split(' ')[0].replace(/\//g, '.');
-                        dailyActualMap[d] = (dailyActualMap[d] || 0) + 1;
+            if (store.main && store.main.length > 0) {
+                const mainKeys = Object.keys(store.main[0]);
+                // Menentukan indeks kolom secara dinamis atau tetap sesuai instruksi (Q = Index 16)
+                const statusIndex = 16;
+                const valUnrIndex = 14; // O
+                const sohSisIndex = 12; // M
+                const sohAktIndex = 15; // P
+                const dateIndex = 0;    // A
+
+                store.main.forEach(row => {
+                    const keys = Object.keys(row);
+                    if (keys.length < statusIndex) return;
+
+                    const valUnr = parseIDNum(row[keys[valUnrIndex]]);
+                    const sohSis = parseIDNum(row[keys[sohSisIndex]]);
+                    const sohAkt = parseIDNum(row[keys[sohAktIndex]]);
+                    const dateRaw = row[keys[dateIndex]] ? row[keys[dateIndex]].toString() : "";
+                    
+                    const price = (sohSis > 0) ? (valUnr / sohSis) : 0;
+                    const valSohFis = price * sohAkt;
+                    
+                    const statusRaw = row[keys[statusIndex]] ? row[keys[statusIndex]].toString().trim() : "";
+                    
+                    totalValUnr += valUnr; 
+                    totalSohFis += valSohFis; 
+                    totalSys += sohSis; 
+                    totalAct += sohAkt;
+
+                    // Perbaikan Logika Penghitungan Terverifikasi (Kolom Q)
+                    if (statusRaw !== "" && statusRaw !== "-") {
+                        verifCount++;
+                        
+                        const status = statusRaw;
+                        statusMap[status] = (statusMap[status] || 0) + 1;
+                        verifFisikMap[status] = (verifFisikMap[status] || 0) + valSohFis;
+
+                        if (dateRaw) {
+                            const d = dateRaw.split(' ')[0].replace(/\//g, '.');
+                            dailyActualMap[d] = (dailyActualMap[d] || 0) + 1;
+                        }
+                    } else {
+                        const status = "Belum Diverifikasi";
+                        statusMap[status] = (statusMap[status] || 0) + 1;
+                        verifFisikMap[status] = (verifFisikMap[status] || 0) + valSohFis;
                     }
-                }
-                statusMap[status] = (statusMap[status] || 0) + 1;
-                verifFisikMap[status] = (verifFisikMap[status] || 0) + valSohFis;
-            });
+                });
+            }
 
             const tableBody = document.getElementById('waiting-qc-table-body'); tableBody.innerHTML = '';
             let waitMaterialTotal = 0, waitValueTotal = 0, waitModelsCount = new Set(), waitModelDist = {};
@@ -391,6 +419,7 @@
             document.getElementById('val-plan-total').innerText = new Intl.NumberFormat('id-ID').format(cumulativePlan);
             document.getElementById('val-actual-total').innerText = new Intl.NumberFormat('id-ID').format(verifCount);
             document.getElementById('val-gap-total').innerText = new Intl.NumberFormat('id-ID').format(cumulativePlan - verifCount);
+            document.getElementById('val-verified-count').innerText = new Intl.NumberFormat('id-ID').format(verifCount);
             document.getElementById('val-soh-sistem').innerText = new Intl.NumberFormat('id-ID').format(totalSys);
             document.getElementById('val-akurasi').innerText = totalSys > 0 ? ((totalAct / totalSys) * 100).toFixed(1) + '%' : '0%';
             document.getElementById('val-selisih').innerText = new Intl.NumberFormat('id-ID').format(Math.abs(totalSys - totalAct));
