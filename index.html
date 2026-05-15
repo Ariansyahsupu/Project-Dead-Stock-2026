@@ -55,7 +55,6 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-6">
-            <!-- Achievement Card -->
             <div class="bg-bss-red text-white p-4 rounded shadow-md h-[180px] flex flex-col justify-between border-b-4 border-black/20">
                 <div class="text-center">
                     <h3 class="text-2xl font-bold" id="val-ach-pct">0%</h3>
@@ -73,7 +72,6 @@
                 </div>
             </div>
 
-            <!-- Value Card (Column O) -->
             <div class="bg-card-maroon text-white p-4 rounded shadow-md h-[180px] flex flex-col justify-between">
                 <div class="text-center">
                     <h3 class="text-2xl font-bold" id="val-total-rp">Rp 0</h3>
@@ -91,7 +89,6 @@
                 </div>
             </div>
 
-            <!-- SOH Accuracy Card -->
             <div class="bg-card-dark text-white p-4 rounded shadow-md h-[180px] flex flex-col justify-between">
                 <div class="text-center">
                     <h3 class="text-2xl font-bold" id="val-selisih">0</h3>
@@ -109,7 +106,6 @@
                 </div>
             </div>
 
-            <!-- Item Terverifikasi Card -->
             <div class="bg-card-rust text-white p-4 rounded shadow-md h-[180px] flex flex-col justify-between">
                 <div class="text-center">
                     <h3 class="text-2xl font-bold" id="val-verified-count">0</h3>
@@ -120,7 +116,6 @@
                 </div>
             </div>
 
-            <!-- Value Fisik Card -->
             <div class="bg-card-pink text-white p-4 rounded shadow-md h-[180px] flex flex-col justify-between">
                 <div class="text-center">
                     <h3 class="text-2xl font-bold" id="val-soh-fisik-rp">Rp 0</h3>
@@ -201,7 +196,6 @@
                 
                 if (isVerified) {
                     verifiedCount++;
-                    // Extract Date from Col A (Format: DD.MM.YYYY HH:mm:ss or similar)
                     if (dateRaw) {
                         const datePart = dateRaw.split(' ')[0].replace(/\//g, '.'); 
                         dailyActualMap[datePart] = (dailyActualMap[datePart] || 0) + 1;
@@ -243,21 +237,16 @@
             const dataActual = [];
             let cumulativeActual = 0;
 
-            for (let i = 0; i < 16; i++) { // From May 11 to May 26
+            for (let i = 0; i < 16; i++) {
                 const date = new Date(startDate);
                 date.setDate(startDate.getDate() + i);
-                
                 const day = date.getDate().toString().padStart(2, '0');
                 const month = (date.getMonth() + 1).toString().padStart(2, '0');
                 const year = date.getFullYear();
-                
                 const label = `${day}/${month}`;
                 const key = `${day}.${month}.${year}`;
-                
                 labelsLine.push(label);
                 dataPlan.push((i + 1) * targetPerDay);
-                
-                // Only show actual data up to current day
                 if (i < daysElapsed) {
                     cumulativeActual += (dailyActualMap[key] || 0);
                     dataActual.push(cumulativeActual);
@@ -279,24 +268,51 @@
                 }
             });
 
+            // Mapping Warna Diagram Lingkaran Sesuai Instruksi
+            const pieLabels = Object.keys(statusMap);
+            const pieColors = pieLabels.map(label => {
+                const l = label.toLowerCase();
+                if (l.includes('lanjut')) return '#2D6A4F';      // Hijau Soft
+                if (l.includes('lelang')) return '#9A2120';      // Merah BSS
+                if (l.includes('skip')) return '#718096';        // Abu-abu Soft
+                if (l.includes('scrab')) return '#1A202C';       // Hitam Soft
+                if (l.includes('interchange')) return '#D69E2E'; // Kuning Soft
+                return '#D1D5DB'; // Default Belum Diverifikasi
+            });
+
             new Chart(document.getElementById('pieChartVerifikasi'), {
                 type: 'doughnut',
                 data: {
-                    labels: Object.keys(statusMap),
+                    labels: pieLabels,
                     datasets: [{ 
                         data: Object.values(statusMap), 
-                        backgroundColor: ['#84302C', '#3A3F40', '#B6443E', '#DC7398', '#9A2120'],
+                        backgroundColor: pieColors,
                         borderWidth: 2, borderColor: '#ffffff'
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    cutout: '65%', 
+                    plugins: { 
+                        legend: { 
+                            position: 'right', 
+                            labels: { boxWidth: 12, font: { size: 10 } } 
+                        } 
+                    } 
+                }
             });
 
             new Chart(document.getElementById('barChartFisik'), {
                 type: 'bar',
                 data: {
                     labels: Object.keys(verifFisikValueMap),
-                    datasets: [{ label: 'Value SOH Fisik', data: Object.values(verifFisikValueMap), backgroundColor: '#84302C', borderRadius: 4 }]
+                    datasets: [{ 
+                        label: 'Value SOH Fisik', 
+                        data: Object.values(verifFisikValueMap), 
+                        backgroundColor: pieColors, // Menggunakan mapping warna yang sama agar konsisten
+                        borderRadius: 4 
+                    }]
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false,
