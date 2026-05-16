@@ -36,14 +36,13 @@
         table { border-collapse: separate; border-spacing: 0; }
         th { position: sticky; top: 0; background: #f9fafb; z-index: 10; }
         .img-preview { width: 100%; max-height: 280px; object-fit: contain; border-radius: 8px; margin-bottom: 16px; border: 2px solid #f3f4f6; background: #fff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .no-img-placeholder { width: 100%; height: 160px; background: #f9fafb; border: 2px dashed #e5e7eb; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #9ca3af; text-align: center; padding: 10px; }
     </style>
 </head>
 <body class="bg-bg-gray font-sans text-gray-800 antialiased min-h-screen flex flex-col">
 
     <div id="loading-overlay" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center text-center p-4">
         <div class="w-12 h-12 border-4 border-bss-red border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-bss-red font-bold uppercase tracking-widest text-xs" id="loading-text">Memuat Data DC Palaran...</p>
+        <p class="text-bss-red font-bold uppercase tracking-widest text-xs" id="loading-text">Sinkronisasi Data DC Palaran...</p>
     </div>
 
     <header class="bg-bss-red text-white shadow-md">
@@ -70,11 +69,13 @@
             </div>
             <div class="text-right flex flex-col gap-1">
                 <span class="bg-card-dark text-white px-3 py-1 rounded text-xs font-bold uppercase tracking-wider">Target: 3.029 Item | Deadline: 26 Mei 2026</span>
-                <span class="text-[9px] text-gray-500 font-bold uppercase italic">Auto-refresh aktif setiap 1 menit</span>
+                <div class="flex items-center justify-end gap-2 text-[9px] text-gray-500 font-bold uppercase italic">
+                    <span>Auto-refresh: 60s</span>
+                    <span class="bg-bss-red text-white px-1.5 rounded" id="data-rows-info">Rows: 0</span>
+                </div>
             </div>
         </div>
 
-        <!-- Row 1: Achievement Metrics -->
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-4">
             <div class="bg-bss-red text-white p-4 rounded shadow-md h-[180px] flex flex-col justify-between border-b-4 border-black/20">
                 <div class="text-center">
@@ -136,7 +137,7 @@
                     <h3 class="text-2xl font-bold" id="val-verified-count">0</h3>
                     <p class="text-[10px] font-bold tracking-widest opacity-80 uppercase">Item Terverifikasi (Q)</p>
                 </div>
-                <div class="bg-black/20 rounded p-2 text-[10px] text-center italic uppercase font-bold">Lookup Kolom Q</div>
+                <div class="bg-black/20 rounded p-2 text-[10px] text-center italic uppercase font-bold text-yellow-300">Total Sync Kolom Q</div>
             </div>
 
             <div class="bg-card-pink text-white p-4 rounded shadow-md h-[180px] flex flex-col justify-between">
@@ -148,7 +149,6 @@
             </div>
         </div>
 
-        <!-- Row 2: Waiting Cards -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-6">
             <div class="bg-card-slate text-white p-4 rounded shadow-md h-[140px] flex flex-col justify-between border-l-4 border-gray-400">
                 <div>
@@ -176,7 +176,6 @@
             </div>
         </div>
 
-        <!-- Row 3: Charts -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div class="bg-white p-5 rounded shadow-sm border h-[380px]">
                 <h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Achievement Plan VS Actual</h3>
@@ -190,7 +189,6 @@
             </div>
         </div>
 
-        <!-- Row 4: Bar & Pie Waiting -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <div class="bg-white p-5 rounded shadow-sm border h-[380px] lg:col-span-2">
                 <h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Value SOH Fisik by Status</h3>
@@ -204,11 +202,10 @@
             </div>
         </div>
 
-        <!-- Row 5: Navigation & Detailed Table -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <div class="bg-white p-6 rounded shadow-sm border lg:col-span-1">
                 <h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase flex items-center gap-2">
-                    <i class="fas fa-list-ul text-bss-red"></i> List Item Navigation
+                    <i class="fas fa-search text-bss-red"></i> List Item Navigation
                 </h3>
                 
                 <div class="mb-4">
@@ -220,7 +217,7 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Item Terverifikasi</label>
+                    <label class="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Item Terverifikasi (Sheet)</label>
                     <select id="select-verified" onchange="viewItemDetails(this.value, 'verified')" class="w-full bg-gray-50 border border-gray-200 rounded p-2 text-xs focus:ring-2 focus:ring-bss-red outline-none">
                         <option value="">-- Pilih Item --</option>
                     </select>
@@ -263,12 +260,14 @@
     </main>
 
     <script>
+        // Update Spreadsheet ID to the newest one provided by user
         const GID_MAIN = '304927561';
         const GID_WAITING = '1549418769'; 
         const GID_INSPECTION = '2092302739'; 
-
-        const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSX0H4b5mQeFYUKD99Xk3EsQsiFqh9QnSGDppeW1aoAcK4dziuqpPItIKZt56dFoA/pub?output=csv&gid=';
-        const INSPECTION_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQHgZqcZHnlRvgvpHqjZhofEbLy3n1eV0s2llB-kljR2iA_FZyaCxJy-jkFC71LvKXWXROx6UJKnonV/pub?output=csv&gid=' + GID_INSPECTION;
+        
+        // Root ID from new link
+        const SPREADSHEET_ROOT_ID = '2PACX-1vQHgZqcZHnlRvgvpHqjZhofEbLy3n1eV0s2llB-kljR2iA_FZyaCxJy-jkFC71LvKXWXROx6UJKnonV';
+        const BASE_URL = `https://docs.google.com/spreadsheets/d/e/${SPREADSHEET_ROOT_ID}/pub?output=csv&gid=`;
 
         let charts = {};
         let store = { main: [], waiting: [], imageMap: {} };
@@ -299,15 +298,16 @@
         async function fetchAllData() {
             const syncIcon = document.getElementById('sync-icon');
             if(syncIcon) syncIcon.classList.add('animate-spin');
+            const cacheBuster = "&t=" + new Date().getTime();
 
             try {
-                const requestMain = new Promise((resolve) => Papa.parse(BASE_URL + GID_MAIN, { download: true, header: true, skipEmptyLines: true, complete: resolve, error: () => resolve({data:[]}) }));
-                const requestWaiting = new Promise((resolve) => Papa.parse(BASE_URL + GID_WAITING, { download: true, header: true, skipEmptyLines: true, complete: resolve, error: () => resolve({data:[]}) }));
-                const requestInspection = new Promise((resolve) => Papa.parse(INSPECTION_URL, { download: true, header: false, skipEmptyLines: true, complete: resolve, error: () => resolve({data:[]}) }));
+                const requestMain = new Promise((resolve) => Papa.parse(BASE_URL + GID_MAIN + cacheBuster, { download: true, header: false, skipEmptyLines: true, complete: resolve, error: () => resolve({data:[]}) }));
+                const requestWaiting = new Promise((resolve) => Papa.parse(BASE_URL + GID_WAITING + cacheBuster, { download: true, header: true, skipEmptyLines: true, complete: resolve, error: () => resolve({data:[]}) }));
+                const requestInspection = new Promise((resolve) => Papa.parse(BASE_URL + GID_INSPECTION + cacheBuster, { download: true, header: false, skipEmptyLines: true, complete: resolve, error: () => resolve({data:[]}) }));
 
                 const [mainResults, waitResults, inspResults] = await Promise.all([requestMain, requestWaiting, requestInspection]);
                 
-                store.main = mainResults.data;
+                store.main = mainResults.data.length > 1 ? mainResults.data.slice(1) : [];
                 store.waiting = waitResults.data;
                 store.imageMap = {};
                 
@@ -315,9 +315,9 @@
                     const dataRows = inspResults.data.slice(9); 
                     dataRows.forEach(row => {
                         const matId = row[2] ? row[2].toString().trim() : ''; 
-                        const photoValue = row[8] ? row[8].toString().trim() : '';
-                        if (matId && photoValue.toLowerCase().startsWith('http')) {
-                            store.imageMap[matId] = convertToDirectLink(photoValue);
+                        const photoVal = row[8] ? row[8].toString().trim() : '';
+                        if (matId && photoVal.toLowerCase().startsWith('http')) {
+                            store.imageMap[matId] = convertToDirectLink(photoVal);
                         }
                     });
                 }
@@ -327,9 +327,10 @@
                 
                 const now = new Date();
                 document.getElementById('last-sync').innerText = "Last Sync: " + now.toLocaleTimeString('id-ID');
+                document.getElementById('data-rows-info').innerText = "Rows: " + store.main.length;
             } catch (err) {
                 console.error(err);
-                document.getElementById('loading-text').innerHTML = "Koneksi Spreadsheet Bermasalah.";
+                document.getElementById('loading-text').innerHTML = "Spreadsheet gagal dimuat.";
             } finally {
                 if(syncIcon) syncIcon.classList.remove('animate-spin');
             }
@@ -342,62 +343,45 @@
             let totalValUnr = 0, totalSohFis = 0, totalSys = 0, totalAct = 0, verifCount = 0;
             let statusMap = {}, verifFisikMap = {}, dailyActualMap = {};
 
-            if (store.main && store.main.length > 0) {
-                const mainKeys = Object.keys(store.main[0]);
-                // Menentukan indeks kolom secara dinamis atau tetap sesuai instruksi (Q = Index 16)
-                const statusIndex = 16;
-                const valUnrIndex = 14; // O
-                const sohSisIndex = 12; // M
-                const sohAktIndex = 15; // P
-                const dateIndex = 0;    // A
+            store.main.forEach(row => {
+                if (row.length < 16) return;
 
-                store.main.forEach(row => {
-                    const keys = Object.keys(row);
-                    if (keys.length < statusIndex) return;
+                const valUnr = parseIDNum(row[14]);
+                const sohSis = parseIDNum(row[12]);
+                const sohAkt = parseIDNum(row[15]);
+                const statusRaw = (row[16] || "").toString().trim();
+                const dateRaw = (row[0] || "").toString().trim();
 
-                    const valUnr = parseIDNum(row[keys[valUnrIndex]]);
-                    const sohSis = parseIDNum(row[keys[sohSisIndex]]);
-                    const sohAkt = parseIDNum(row[keys[sohAktIndex]]);
-                    const dateRaw = row[keys[dateIndex]] ? row[keys[dateIndex]].toString() : "";
-                    
-                    const price = (sohSis > 0) ? (valUnr / sohSis) : 0;
-                    const valSohFis = price * sohAkt;
-                    
-                    const statusRaw = row[keys[statusIndex]] ? row[keys[statusIndex]].toString().trim() : "";
-                    
-                    totalValUnr += valUnr; 
-                    totalSohFis += valSohFis; 
-                    totalSys += sohSis; 
-                    totalAct += sohAkt;
+                const price = (sohSis > 0) ? (valUnr / sohSis) : 0;
+                const valSohFis = price * sohAkt;
 
-                    // Perbaikan Logika Penghitungan Terverifikasi (Kolom Q)
-                    if (statusRaw !== "" && statusRaw !== "-") {
-                        verifCount++;
-                        
-                        const status = statusRaw;
-                        statusMap[status] = (statusMap[status] || 0) + 1;
-                        verifFisikMap[status] = (verifFisikMap[status] || 0) + valSohFis;
+                totalValUnr += valUnr; 
+                totalSohFis += valSohFis; 
+                totalSys += sohSis; 
+                totalAct += sohAkt;
 
-                        if (dateRaw) {
-                            const d = dateRaw.split(' ')[0].replace(/\//g, '.');
-                            dailyActualMap[d] = (dailyActualMap[d] || 0) + 1;
-                        }
-                    } else {
-                        const status = "Belum Diverifikasi";
-                        statusMap[status] = (statusMap[status] || 0) + 1;
-                        verifFisikMap[status] = (verifFisikMap[status] || 0) + valSohFis;
+                if (statusRaw !== "" && statusRaw !== "-" && statusRaw !== "null") {
+                    verifCount++;
+                    const status = statusRaw;
+                    statusMap[status] = (statusMap[status] || 0) + 1;
+                    verifFisikMap[status] = (verifFisikMap[status] || 0) + valSohFis;
+                    if (dateRaw) {
+                        const d = dateRaw.split(' ')[0].replace(/\//g, '.');
+                        dailyActualMap[d] = (dailyActualMap[d] || 0) + 1;
                     }
-                });
-            }
+                } else {
+                    const status = "Belum Diverifikasi";
+                    statusMap[status] = (statusMap[status] || 0) + 1;
+                    verifFisikMap[status] = (verifFisikMap[status] || 0) + valSohFis;
+                }
+            });
 
             const tableBody = document.getElementById('waiting-qc-table-body'); tableBody.innerHTML = '';
             let waitMaterialTotal = 0, waitValueTotal = 0, waitModelsCount = new Set(), waitModelDist = {};
-
             store.waiting.forEach((row, idx) => {
                 const keys = Object.keys(row);
                 const colVal = keys.find(k => k.toLowerCase().includes('value unrestricted')), colMod = keys.find(k => k.toLowerCase().includes('model unit')), colMat = keys.find(k => k.toLowerCase().includes('material'));
                 const matName = row[colMat] || "N/A", modelName = row[colMod] || "N/A", val = parseIDNum(row[colVal]);
-                
                 waitMaterialTotal++; waitValueTotal += val;
                 if (modelName !== "-" && modelName !== "N/A") {
                     const m = modelName.toString().trim();
@@ -428,24 +412,20 @@
             document.getElementById('wait-gap-plan').innerText = new Intl.NumberFormat('id-ID').format(cumulativePlan - (verifCount + waitMaterialTotal));
             document.getElementById('wait-model-unit').innerText = new Intl.NumberFormat('id-ID').format(waitModelsCount.size);
             document.getElementById('wait-value-unr').innerText = formatRpSmart(waitValueTotal);
-
             renderCharts(verifFisikMap, statusMap, dailyActualMap, startDate, daysElapsed, waitModelDist);
         }
 
         function handleSearch(q) { updateDropdowns(q.toLowerCase()); }
-
         function updateDropdowns(search = "") {
             const selVer = document.getElementById('select-verified'), selWait = document.getElementById('select-waiting');
             selVer.innerHTML = '<option value="">-- Pilih Item --</option>';
             selWait.innerHTML = '<option value="">-- Pilih Item --</option>';
-
             store.main.forEach((row, idx) => {
-                const keys = Object.keys(row), status = row[keys[16]] ? row[keys[16]].toString().trim() : "", mat = (row[keys[1]] || "").toString();
+                const status = (row[16] || "").toString().trim(), mat = (row[1] || "").toString();
                 if (status !== "" && status !== "-" && (search === "" || mat.toLowerCase().includes(search))) {
                     const opt = document.createElement('option'); opt.value = idx; opt.text = `${mat} [${status}]`; selVer.add(opt);
                 }
             });
-
             store.waiting.forEach((row, idx) => {
                 const keys = Object.keys(row), matCol = keys.find(k => k.toLowerCase().includes('material')), modCol = keys.find(k => k.toLowerCase().includes('model unit'));
                 const mat = (row[matCol] || "").toString(), mod = (row[modCol] || "No Model").toString();
@@ -459,42 +439,25 @@
             if (idx === "") { document.getElementById('item-preview-card').classList.add('hidden'); return; }
             const card = document.getElementById('item-preview-card'), title = document.getElementById('preview-title'), content = document.getElementById('preview-content'), imgBox = document.getElementById('preview-image-container');
             card.classList.remove('hidden'); content.innerHTML = ''; imgBox.innerHTML = '';
-
             let row, matId, details = [];
             if (type === 'verified') {
-                row = store.main[idx]; const keys = Object.keys(row); matId = row[keys[1]] ? row[keys[1]].toString().trim() : '';
+                row = store.main[idx]; matId = row[1] ? row[1].toString().trim() : '';
                 title.innerText = "Verified: " + matId;
-                details = [{ label: 'STATUS', val: row[keys[16]] }, { label: 'TANGGAL', val: row[keys[0]] }, { label: 'VALUE UNR', val: formatRpSmart(parseIDNum(row[keys[14]])) }, { label: 'SOH AKTUAL', val: row[keys[15]] }];
+                details = [{ label: 'STATUS', val: row[16] }, { label: 'TANGGAL', val: row[0] }, { label: 'VALUE UNR', val: formatRpSmart(parseIDNum(row[14])) }, { label: 'SOH AKTUAL', val: row[15] }];
             } else {
                 row = store.waiting[idx]; const keys = Object.keys(row); const colMat = keys.find(k => k.toLowerCase().includes('material')), colMod = keys.find(k => k.toLowerCase().includes('model unit')), colVal = keys.find(k => k.toLowerCase().includes('value unrestricted'));
                 matId = row[colMat] ? row[colMat].toString().trim() : '';
                 title.innerText = "Waiting: " + matId;
                 details = [{ label: 'MODEL UNIT', val: row[colMod] }, { label: 'VALUE UNR', val: formatRpSmart(parseIDNum(row[colVal])) }, { label: 'LOKASI BIN', val: row[keys.find(k => k.toLowerCase().includes('bin'))] || 'N/A' }];
             }
-
-            const imageSource = store.imageMap[matId];
-            if (imageSource) {
-                imgBox.innerHTML = `<img src="${imageSource}" class="img-preview" alt="Foto Fisik" onerror="handleImageError(this)">`;
+            if (store.imageMap[matId]) {
+                imgBox.innerHTML = `<img src="${store.imageMap[matId]}" class="img-preview" alt="Foto Fisik" onerror="handleImageError(this)">`;
             } else {
-                imgBox.innerHTML = `
-                    <div class="no-img-placeholder">
-                        <i class="fas fa-image text-3xl mb-2"></i>
-                        <p class="text-[10px] font-bold">Link Gambar Belum Ada</p>
-                        <p class="text-[8px] opacity-60">Gunakan Google Apps Script untuk otomatisasi ribuan item.</p>
-                    </div>`;
+                imgBox.innerHTML = `<div class="no-img-placeholder"><i class="fas fa-image text-3xl mb-2"></i><p class="text-[10px] font-bold">Link Gambar Belum Ada</p></div>`;
             }
-
             details.forEach(d => { content.innerHTML += `<div class="flex justify-between border-b pb-1"><span class="font-bold text-gray-400 uppercase">${d.label}</span><span class="font-bold text-gray-700">${d.val || '-'}</span></div>`; });
         }
-
-        function handleImageError(img) {
-            img.parentNode.innerHTML = `
-                <div class="no-img-placeholder text-red-400 border-red-100">
-                    <i class="fas fa-eye-slash text-2xl mb-2"></i>
-                    <p class="text-[9px] font-bold">Gambar Tidak Terbaca</p>
-                    <p class="text-[8px] opacity-70">Pastikan gambar bukan hasil "Paste" fisik di sel.</p>
-                </div>`;
-        }
+        function handleImageError(img) { img.parentNode.innerHTML = `<div class="no-img-placeholder text-red-400 border-red-100"><i class="fas fa-eye-slash text-2xl mb-2"></i><p class="text-[9px] font-bold">Gambar Tidak Terbaca</p></div>`; }
 
         function renderCharts(verifFisikMap, statusMap, dailyActualMap, start, days, waitDist) {
             const labelsLine = [], dataPlan = [], dataActual = [];
@@ -506,14 +469,10 @@
                 if (i < days) { cumulative += (dailyActualMap[key] || 0); dataActual.push(cumulative); }
             }
             Object.values(charts).forEach(c => c.destroy());
-            
             charts.line = new Chart(document.getElementById('lineChartAchievement'), { type: 'line', data: { labels: labelsLine, datasets: [{ label: 'Plan', data: dataPlan, borderColor: '#3A3F40', borderDash: [5, 5], fill: false, pointRadius: 0 }, { label: 'Actual', data: dataActual, borderColor: '#9A2120', backgroundColor: 'rgba(154, 33, 32, 0.1)', fill: true, tension: 0.3, pointRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false } });
-            
             const pieLabels = Object.keys(statusMap); const pieColors = pieLabels.map(l => { const s = l.toLowerCase(); if (s.includes('lanjut')) return '#2D6A4F'; if (s.includes('lelang')) return '#9A2120'; if (s.includes('skip')) return '#718096'; if (s.includes('scrab')) return '#1A202C'; if (s.includes('interchange')) return '#D69E2E'; return '#D1D5DB'; });
             charts.pieVer = new Chart(document.getElementById('pieChartVerifikasi'), { type: 'doughnut', data: { labels: pieLabels, datasets: [{ data: Object.values(statusMap), backgroundColor: pieColors, borderWidth: 2, borderColor: '#ffffff' }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 9 } } } } } });
-            
             charts.bar = new Chart(document.getElementById('barChartFisik'), { type: 'bar', data: { labels: Object.keys(verifFisikMap), datasets: [{ label: 'Value SOH Fisik', data: Object.values(verifFisikMap), backgroundColor: pieColors, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: v => formatRpSmart(v), font: { size: 9 } } } } } });
-
             const waitLabels = Object.keys(waitDist), softPalette = ['#4A5568', '#2D6A6A', '#434190', '#DC7398', '#B6443E', '#84302C'];
             charts.pieWait = new Chart(document.getElementById('pieChartWaitingModel'), { type: 'pie', data: { labels: waitLabels, datasets: [{ data: Object.values(waitDist), backgroundColor: waitLabels.map((_, i) => softPalette[i % softPalette.length]), borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 8 } } } } } });
         }
