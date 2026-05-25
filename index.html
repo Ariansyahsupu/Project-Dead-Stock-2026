@@ -849,7 +849,7 @@
             const startDate = new Date('2026-05-11');
             const today = new Date(); 
             const daysElapsed = Math.max(1, Math.ceil(Math.abs(today - startDate) / (1000 * 60 * 60 * 24))); 
-            const cumulativePlan = daysElapsed * 240;
+            const cumulativePlan = Math.min(daysElapsed * 240, 3029);
 
             // Apply calculated UI metrics secara dinamis
             document.getElementById('val-total-rp').innerText = formatRpSmart(totalVerifiedValue);
@@ -879,7 +879,7 @@
         }
 
         function handleSearch(q) { 
-            updateDropdowns(q.toLowerCase()); 
+            updateDropdowns(q.toLowerCase().trim()); 
         }
 
         function updateDropdowns(search = "") {
@@ -895,7 +895,7 @@
                 const pelaksana = (row[COL_MAP.pelaksana] || "").toString().trim();
                 const mat = (row[COL_MAP.material] || "").toString();
                 
-                const isVerified = (status !== "" && status !== "-" && status !== "null");
+                const isVerified = (status !== "" && status !== "-" && status !== "null" && !status.toLowerCase().includes('belum'));
                 const isPrepared = (pelaksana !== "" && pelaksana !== "-" && pelaksana !== "null");
                 
                 if (isVerified && (search === "" || mat.toLowerCase().includes(search))) {
@@ -903,10 +903,10 @@
                     opt.value = idx; 
                     opt.text = `${mat} [${status}]`; 
                     selVer.add(opt);
-                } else if (isPrepared && !isVerified && (search === "" || mat.toLowerCase().includes(search))) {
+                } else if (!isVerified && (search === "" || mat.toLowerCase().includes(search))) {
                     const opt = document.createElement('option'); 
                     opt.value = idx; 
-                    opt.text = `${mat} [Prepared Log: ${pelaksana}]`; 
+                    opt.text = isPrepared ? `${mat} [Prepared Log: ${pelaksana}]` : `${mat} [Belum Diproses]`; 
                     selWait.add(opt);
                 }
             });
@@ -996,8 +996,9 @@
                 const key = `${day}.${month}.${d.getFullYear()}`;
                 
                 labelsLine.push(`${day}/${month}`); 
-                dataPlan.push((i + 1) * 240);
-                dataPlanValue.push((i + 1) * 240 * targetValuePerItem);
+                const currentPlanTarget = Math.min((i + 1) * 240, 3029);
+                dataPlan.push(currentPlanTarget);
+                dataPlanValue.push(currentPlanTarget * targetValuePerItem);
                 
                 if (i < days) { 
                     cumulative += (dailyActualMap[key] || 0); 
