@@ -981,14 +981,23 @@
         }
 
         function renderCharts(verifFisikMap, statusMap, dailyActualMap, start, days, waitDist, dailyPreparedMap, dailyActualValueMap, dailyPreparedValueMap) {
-            const labelsLine = [], dataPlan = [], dataActual = [], dataWait = [];
-            const dataPlanValue = [], dataActualValue = [], dataWaitValue = [];
+            const labelsLine = [], dataPlan = [];
+            const dataActual = [], dataActualOverdue = [];
+            const dataWait = [], dataWaitOverdue = [];
+            
+            const dataPlanValue = [];
+            const dataActualValue = [], dataActualValueOverdue = [];
+            const dataWaitValue = [], dataWaitValueOverdue = [];
+            
             let cumulative = 0, cumulativeWait = 0;
             let cumulativeValue = 0, cumulativeWaitValue = 0;
             
             const targetValuePerItem = 11632105719 / 3029;
             
-            for (let i = 0; i < 16; i++) {
+            // Perluas batas grafik dari 16 hari (Cut off 26 Mei) menjadi hari ini (tanggal berjalan)
+            const totalDaysToPlot = Math.max(16, days + 1);
+            
+            for (let i = 0; i < totalDaysToPlot; i++) {
                 const d = new Date(start); 
                 d.setDate(start.getDate() + i);
                 const day = d.getDate().toString().padStart(2, '0');
@@ -1000,18 +1009,42 @@
                 dataPlan.push(currentPlanTarget);
                 dataPlanValue.push(currentPlanTarget * targetValuePerItem);
                 
-                if (i < days) { 
+                if (i <= days) { 
                     cumulative += (dailyActualMap[key] || 0); 
-                    dataActual.push(cumulative); 
-                    
                     cumulativeWait += (dailyPreparedMap[key] || 0); 
-                    dataWait.push(cumulativeWait);
-
+                    
                     cumulativeValue += (dailyActualValueMap[key] || 0);
-                    dataActualValue.push(cumulativeValue);
-
                     cumulativeWaitValue += (dailyPreparedValueMap[key] || 0);
-                    dataWaitValue.push(cumulativeWaitValue);
+                    
+                    if (i <= 15) { // On-time progress (S/d Tanggal 26)
+                        dataActual.push(cumulative); 
+                        dataWait.push(cumulativeWait);
+                        dataActualValue.push(cumulativeValue);
+                        dataWaitValue.push(cumulativeWaitValue);
+                        
+                        // Menautkan titik terakhir cutoff ke garis overdue
+                        if (i === 15) {
+                            dataActualOverdue.push(cumulative);
+                            dataWaitOverdue.push(cumulativeWait);
+                            dataActualValueOverdue.push(cumulativeValue);
+                            dataWaitValueOverdue.push(cumulativeWaitValue);
+                        } else {
+                            dataActualOverdue.push(null);
+                            dataWaitOverdue.push(null);
+                            dataActualValueOverdue.push(null);
+                            dataWaitValueOverdue.push(null);
+                        }
+                    } else { // Overdue progress (Tanggal 27 dst)
+                        dataActual.push(null);
+                        dataWait.push(null);
+                        dataActualValue.push(null);
+                        dataWaitValue.push(null);
+
+                        dataActualOverdue.push(cumulative);
+                        dataWaitOverdue.push(cumulativeWait);
+                        dataActualValueOverdue.push(cumulativeValue);
+                        dataWaitValueOverdue.push(cumulativeWaitValue);
+                    }
                 }
             }
             
@@ -1025,7 +1058,9 @@
                     datasets: [
                         { label: 'Plan Target', data: dataPlan, borderColor: '#3A3F40', borderDash: [5, 5], fill: false, pointRadius: 0 }, 
                         { label: 'Actual (Verified)', data: dataActual, borderColor: '#9A2120', backgroundColor: 'rgba(154, 33, 32, 0.1)', fill: true, tension: 0.3, pointRadius: 4 }, 
-                        { label: 'Waiting QC Tim Teknis', data: dataWait, borderColor: '#2D6A6A', backgroundColor: 'rgba(45, 106, 106, 0.1)', fill: true, tension: 0.3, pointRadius: 4 }
+                        { label: 'Progress Overdue (Verified)', data: dataActualOverdue, borderColor: '#E04A48', borderDash: [4, 4], backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 4, pointStyle: 'triangle' },
+                        { label: 'Waiting QC Tim Teknis', data: dataWait, borderColor: '#2D6A6A', backgroundColor: 'rgba(45, 106, 106, 0.1)', fill: true, tension: 0.3, pointRadius: 4 },
+                        { label: 'Progress Overdue (Waiting QC)', data: dataWaitOverdue, borderColor: '#4FD1C5', borderDash: [4, 4], backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 4, pointStyle: 'triangle' }
                     ] 
                 }, 
                 options: { 
@@ -1045,7 +1080,9 @@
                     datasets: [
                         { label: 'Plan Target Value', data: dataPlanValue, borderColor: '#3A3F40', borderDash: [5, 5], fill: false, pointRadius: 0 }, 
                         { label: 'Actual Value (Verified)', data: dataActualValue, borderColor: '#9A2120', backgroundColor: 'rgba(154, 33, 32, 0.1)', fill: true, tension: 0.3, pointRadius: 4 }, 
-                        { label: 'Waiting QC Value', data: dataWaitValue, borderColor: '#2D6A6A', backgroundColor: 'rgba(45, 106, 106, 0.1)', fill: true, tension: 0.3, pointRadius: 4 }
+                        { label: 'Progress Overdue Value (Verified)', data: dataActualValueOverdue, borderColor: '#E04A48', borderDash: [4, 4], backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 4, pointStyle: 'triangle' },
+                        { label: 'Waiting QC Value', data: dataWaitValue, borderColor: '#2D6A6A', backgroundColor: 'rgba(45, 106, 106, 0.1)', fill: true, tension: 0.3, pointRadius: 4 },
+                        { label: 'Progress Overdue Value (Waiting QC)', data: dataWaitValueOverdue, borderColor: '#4FD1C5', borderDash: [4, 4], backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 4, pointStyle: 'triangle' }
                     ] 
                 }, 
                 options: { 
