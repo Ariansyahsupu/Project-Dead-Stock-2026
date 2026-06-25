@@ -817,9 +817,12 @@
                         const sohAkt = parseIDNum(r[COL_MAP.qty]);
                         const rawPrice = parseIDNum(r[COL_MAP.price]);
                         let rawValue = parseIDNum(r[COL_MAP.value]);
-                        if (rawValue === 0 && rawPrice > 0) {
-                            rawValue = rawPrice * (sohAkt > 0 ? sohAkt : 1);
-                        }
+                        
+                        // Menonaktifkan fallback otomatis agar sesuai dengan total riil sheet
+                        // if (rawValue === 0 && rawPrice > 0) {
+                        //     rawValue = rawPrice * (sohAkt > 0 ? sohAkt : 1);
+                        // }
+                        
                         if (isVerified) {
                             pkmVerifiedValue += rawValue;
                         } else {
@@ -974,10 +977,10 @@
                 const rawPrice = parseIDNum(row[COL_MAP.price]);
                 let rawValue = parseIDNum(row[COL_MAP.value]);
 
-                // Fallback otomatis: Jika VALUE kosong di sheet, hitung dari PRICE x QTY
-                if (rawValue === 0 && rawPrice > 0) {
-                    rawValue = rawPrice * (sohAkt > 0 ? sohAkt : 1);
-                }
+                // Menonaktifkan fallback otomatis agar total murni 100% mengikuti kolom VALUE di spreadsheet (42.28 M)
+                // if (rawValue === 0 && rawPrice > 0) {
+                //     rawValue = rawPrice * (sohAkt > 0 ? sohAkt : 1);
+                // }
 
                 const isMocked = store.isSimulation;
                 const price = isMocked ? (Math.floor(Math.random() * 450000) + 50000) : rawPrice;
@@ -1039,10 +1042,13 @@
                 let val = 0;
                 if (row[COL_MAP.value] && row[COL_MAP.value].toString().trim() !== '') {
                     val = parseIDNum(row[COL_MAP.value]);
-                } else if (row[COL_MAP.price] && row[COL_MAP.price].toString().trim() !== '') {
-                    const fallbackQty = parseIDNum(row[COL_MAP.qty]) > 0 ? parseIDNum(row[COL_MAP.qty]) : 1;
-                    val = parseIDNum(row[COL_MAP.price]) * fallbackQty;
-                } else {
+                } 
+                // Menonaktifkan fallback
+                // else if (row[COL_MAP.price] && row[COL_MAP.price].toString().trim() !== '') {
+                //     const fallbackQty = parseIDNum(row[COL_MAP.qty]) > 0 ? parseIDNum(row[COL_MAP.qty]) : 1;
+                //     val = parseIDNum(row[COL_MAP.price]) * fallbackQty;
+                // } 
+                else {
                     val = store.isSimulation ? (Math.floor(Math.random() * 450000) + 50000) : 0;
                 }
                 
@@ -1185,10 +1191,11 @@
             const bin = row[COL_MAP.bin] || 'N/A';
             
             let val = parseIDNum(row[COL_MAP.value]);
-            if (val === 0 && parseIDNum(row[COL_MAP.price]) > 0) {
-                const fallbackQty = parseIDNum(row[COL_MAP.qty]) > 0 ? parseIDNum(row[COL_MAP.qty]) : 1;
-                val = parseIDNum(row[COL_MAP.price]) * fallbackQty;
-            }
+            // Menonaktifkan fallback
+            // if (val === 0 && parseIDNum(row[COL_MAP.price]) > 0) {
+            //     const fallbackQty = parseIDNum(row[COL_MAP.qty]) > 0 ? parseIDNum(row[COL_MAP.qty]) : 1;
+            //     val = parseIDNum(row[COL_MAP.price]) * fallbackQty;
+            // }
             
             const isVerified = (status !== "" && status !== "-" && status !== "null");
             
